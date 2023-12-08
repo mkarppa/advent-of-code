@@ -1,0 +1,152 @@
+      PROGRAM DAY8A
+      IMPLICIT NONE
+      REAL(4) STTIME, EDTIME
+      CHARACTER*256 FNAME
+      INTEGER START, ENDNOD, STEPS
+      INTEGER A(1024,2)
+      INTEGER INSTR(512)
+      INTEGER NINSTR
+      INTEGER TRAVERSE
+      STTIME = SECNDS(0.0)
+      IF (IARGC() .NE. 1) THEN
+         WRITE (0,*) 'usage: day8a <input.txt>'
+         STOP 1
+      ENDIF
+
+      CALL GETARG(1,FNAME)
+      CALL RDATA(FNAME,A,START,ENDNOD,INSTR,NINSTR)
+      
+      STEPS = TRAVERSE(A,INSTR,NINSTR,START,ENDNOD)
+
+      WRITE (*,*) STEPS
+      
+      EDTIME = SECNDS(0.0)
+ 10   FORMAT ('Elapsed time ',F9.6,' seconds')
+      WRITE (*,10) (EDTIME-STTIME)
+      END
+
+      SUBROUTINE RDATA(FNAME,A,START,ENDNOD,INSTR,NINSTR)
+      IMPLICIT NONE
+      CHARACTER*256 FNAME
+      INTEGER A(1024,2)
+      INTEGER START, ENDNOD
+      INTEGER INSTR(512)
+      INTEGER NINSTR
+      CHARACTER*3 HMKEYS(2048)
+      INTEGER HMVALS(2048)
+      CHARACTER*512 LINE
+      INTEGER I, HM_GET
+      CHARACTER*3 NODE, LEFT, RIGHT
+
+      CALL HM_INIT(HMKEYS, HMVALS)
+      
+      OPEN(1,FILE=FNAME)
+ 10   FORMAT (A)
+      READ(1,10) LINE
+      READ(1,10) LINE
+      I = 0
+      DO 30
+         READ(1,10,END=40) LINE
+         NODE = LINE(1:3)
+         I = I + 1
+         CALL HM_ADD(HMKEYS, HMVALS, NODE, I)
+         IF (NODE .EQ. 'AAA') START = I
+         IF (NODE .EQ. 'ZZZ') ENDNOD = I
+ 30   CONTINUE
+ 40   CLOSE(1)
+
+      OPEN(1,FILE=FNAME)
+      READ(1,10) LINE
+      DO 60 I = 1,LEN(LINE)
+         IF (LINE(I:I) .EQ. 'L') THEN
+            INSTR(I) = 1
+         ELSE IF (LINE(I:I) .EQ. 'R') THEN
+            INSTR(I) = 2
+         ELSE
+            GOTO 70
+         ENDIF
+ 60   CONTINUE
+ 70   NINSTR = I-1
+
+      READ(1,10) LINE
+      I = 0
+      DO 80
+         READ(1,10,END=50) LINE
+         I = I+1
+         LEFT = LINE(8:10)
+         RIGHT = LINE(13:15)
+         A(I,1) = HM_GET(HMKEYS, HMVALS, LEFT)
+         A(I,2) = HM_GET(HMKEYS, HMVALS, RIGHT)         
+ 80   CONTINUE
+ 50   CLOSE(1)
+      END SUBROUTINE
+
+      INTEGER FUNCTION HASH(S)
+      IMPLICIT NONE
+      CHARACTER*3 S
+      INTEGER(8) H
+      H = 567376452
+      H = LSHIFT(H,32) + 340231111
+      H = H*(ICHAR(S(1:1)) + 256*ICHAR(S(2:2)) + 65536*ICHAR(S(3:3)))
+      HASH = INT(ISHFT(H,-53) + 1)
+      END FUNCTION
+
+      SUBROUTINE HM_INIT(HMKEYS,HMVALS)
+      IMPLICIT NONE
+      CHARACTER*3 HMKEYS(2048)
+      INTEGER HMVALS(2048)
+      INTEGER I
+      DO 20 I = 1,2048
+         HMKEYS(I) = '   '
+         HMVALS(I) = -1
+ 20   CONTINUE
+      END SUBROUTINE
+
+      SUBROUTINE HM_ADD(HMKEYS, HMVALS, K, V)
+      IMPLICIT NONE
+      CHARACTER*3 HMKEYS(2048)
+      INTEGER HMVALS(2048)
+      CHARACTER*3 K
+      INTEGER V, I, HASH
+      I = HASH(K)
+ 10   IF (HMVALS(I) .NE. -1) THEN
+         I = I + 1
+         IF (I .GT. 2048) I = 1
+         GOTO 10
+      ENDIF
+      HMKEYS(I) = K
+      HMVALS(I) = V
+      END SUBROUTINE
+
+      INTEGER FUNCTION HM_GET(HMKEYS, HMVALS, K)
+      IMPLICIT NONE
+      CHARACTER*3 HMKEYS(2048)
+      INTEGER HMVALS(2048)
+      CHARACTER*3 K
+      INTEGER I, HASH
+      I = HASH(K)
+ 10   IF (HMVALS(I) .EQ. -1) STOP 2
+      IF (K .NE. HMKEYS(I)) THEN
+         I = I + 1
+         IF (I .GT. 2048) I = 1
+         GOTO 10
+      ENDIF
+      HM_GET = HMVALS(I)
+      END FUNCTION
+
+      INTEGER FUNCTION TRAVERSE(A, INSTR, NINSTR, START, ENDNOD)
+      IMPLICIT NONE
+      INTEGER START, ENDNOD, STEPS, V, INSTI, NINSTR
+      INTEGER A(1024,2)
+      INTEGER INSTR(512)
+      V = START
+      STEPS = 0
+      INSTI = 0
+ 10   IF (V .EQ. ENDNOD) GOTO 20
+      STEPS = STEPS + 1
+      INSTI = INSTI + 1
+      IF (INSTI .GT. NINSTR) INSTI = 1
+      V = A(V,INSTR(INSTI))
+      GOTO 10
+ 20   TRAVERSE = STEPS
+      END FUNCTION
