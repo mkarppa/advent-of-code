@@ -432,11 +432,13 @@ void solve(struct u64* S) {
 int main(void) {
   struct u64 S;
   char buffer[21];
+  fast();
   read_data(FILENAME);
   solve(&S);
   u64_to_str(buffer, &S);
   printf("%s\n", buffer);
 
   printf("time elapsed: %ld s\n", clock()/CLOCKS_PER_SEC);
+  slow();
   return EXIT_SUCCESS;
 }
