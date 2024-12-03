@@ -1,4 +1,4 @@
-' Day1, simple solution using counting sort
+' Day2, simple brute force solution
 
 ' Set output to terminal instead of screen window
 $Console:Only
