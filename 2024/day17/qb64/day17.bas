@@ -1,4 +1,4 @@
-' Day16, in part 1, simply simulate the operation of the computer
+' Day17, in part 1, simply simulate the operation of the computer
 ' In part 2, use backtracking search to recursively construct the quine
 ' program *starting from the end*
 
