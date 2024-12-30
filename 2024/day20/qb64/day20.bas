@@ -1,4 +1,4 @@
-' Day19, another application of BFS (although rather a trivial version)
+' Day20, another application of BFS (although rather a trivial version)
 ' Then just precompute the length of paths and try all possible shortcuts
 
 ' Require explicit variable declarations
